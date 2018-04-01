@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "omp.h": "c",
-        "stdio.h": "c",
-        "array": "c",
-        "slist": "c",
-        "initializer_list": "c"
-    }
-}
