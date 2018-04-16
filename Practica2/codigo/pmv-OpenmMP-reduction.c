@@ -3,12 +3,16 @@
 #include <time.h> // biblioteca donde se encuentra la función clock_gettime()
 #include <omp.h>
 
-#define PRUEBAS
+//#define PRUEBAS
 int main(int argc, char **argv) {
 
     int fil;
-    printf("\nIntroduce el tamaño de la matriz cuadrada: ");
-    scanf("%d", &fil );
+    #ifdef PRUEBAS
+		printf("\nIntroduce el tamaño de la matriz cuadrada: ");
+		scanf("%d", &fil );
+	#else
+		fil = atoi(argv[1]);
+	#endif
 
     //Reservamos memoria
     int *v= (int*) malloc(fil*sizeof(int));
@@ -19,36 +23,35 @@ int main(int argc, char **argv) {
 		if(matriz[i] == NULL) perror("Error: ");
     }
 
-	double start, end , diferencia;  
+	struct timespec cgt1,cgt2;
+    double ncgt; //para tiempo de ejecución
 
 
-    #pragma omp parallel
-    {
-        //Inicializamos los datos
-        for(int f = 0; f < fil; f++){
-            v[f] = 3.0;
-            resultado[f] = 0;
-            #pragma omp for
-            for(int c = 0; c < fil; c++)
-                matriz[f][c] = 2.0;
-        }
+    
+	//Inicializamos los datos
+	for(int f = 0; f < fil; f++){
+		v[f] = 3.0;
+		resultado[f] = 0;
+		#pragma  omp parallel for
+			for(int c = 0; c < fil; c++)
+				matriz[f][c] = 2.0;
+	}
 
-        #pragma single
-            start = omp_get_wtime();
-        for(int f = 0; f < fil; f++){
-            int suma = 0;
-            #pragma omp for reduction(+:suma)
-            for(int c = 0; c < fil; c++)
-                suma += v[f]*matriz[f][c];
-            #pragma omp atomic
-                resultado[f] = suma;
-            
-        }
-        #pragma single
-            end = omp_get_wtime();    
-    }
+	clock_gettime(CLOCK_REALTIME,&cgt1);
 
-	diferencia=end-start;
+	for(int f = 0; f < fil; f++){
+		int suma = 0;
+		#pragma omp parallel for  reduction(+:suma)
+			for(int c = 0; c < fil; c++)
+				suma += v[f]*matriz[f][c];
+		resultado[f] = suma;
+		
+	}
+	clock_gettime(CLOCK_REALTIME,&cgt2);
+    ncgt=(double) (cgt2.tv_sec-cgt1.tv_sec)+ (double) ((cgt2.tv_nsec-cgt1.tv_nsec)/(1.e+9));
+
+
+
 
     //imprimimimos los datos
     #ifdef PRUEBAS
@@ -69,10 +72,10 @@ int main(int argc, char **argv) {
     for(int c = 0; c < fil; c++){
         printf("[%d]\n",resultado[c]);
     }
-    printf("El tiempo usado es%f:\n",diferencia);
+    printf("El tiempo usado es%f:\n",ncgt);
 
     #else
-        printf("Primero:%d Ultimo:%d %f \n",resultado[0],resultado[fil-1],diferencia);
+        printf("Primero:%d Ultimo:%d %f \n",resultado[0],resultado[fil-1],ncgt);
 
     #endif
     free(matriz);
