@@ -3,13 +3,16 @@
 #include <time.h> // biblioteca donde se encuentra la función clock_gettime()
 #include <omp.h>
 
-#define PRUEBAS
+//#define PRUEBAS
 int main(int argc, char **argv) {
 
     int fil;
-    printf("\nIntroduce el tamaño de la matriz cuadrada: ");
-    scanf("%d", &fil );
-
+	#ifdef PRUEBAS
+		printf("\nIntroduce el tamaño de la matriz cuadrada: ");
+		scanf("%d", &fil );
+	#else
+		fil = atoi(argv[1]);
+	#endif
     //Reservamos memoria
     int *v= (int*) malloc(fil*sizeof(int));
     int *resultado = (int*) malloc(fil*sizeof(int));
@@ -67,7 +70,9 @@ int main(int argc, char **argv) {
     printf("El tiempo usado es%f:\n",diferencia);
 
     #else
-        printf("Primero:%d Ultimo:%d %f \n",resultado[0],resultado[fil-1],diferencia);
+        //Lo imprimo por la salida de errores para coger solo los tiempos
+		fprintf( stderr, "Primero:%d Ultimo:%d\n", resultado[0],resultado[fil-1]);
+        printf("Tiempo:%f \n",diferencia);
 
     #endif
     free(matriz);
